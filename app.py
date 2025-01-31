@@ -1,6 +1,32 @@
 import streamlit as st
 import pandas as pd
 import duckdb
+import io
+
+
+# dataframes & solution
+csv = '''
+beverage,price
+orange juice,2.5
+expresso,2
+tea,3
+'''
+beverages = pd.read_csv(io.StringIO(csv))
+
+csv2 = '''
+food_item,food_price
+cookie,2.5
+chocolatine,2
+muffin,3
+'''
+food_items = pd.read_csv(io.StringIO(csv2))
+
+answer = """
+SELECT * FROM beverages
+CROSS JOIN food_items
+"""
+solution = duckdb.sql(answer).df()
+
 
 # the title of the app
 st.write("""
@@ -9,33 +35,36 @@ Spaced Repetition System SQL practice
 """)
 st.write("Let's study!")
 
+
 # to select a topic to study
-option = st.selectbox(
-    "How would you like to study?",
-    ("Joins", "GroupBy", "Window Functions"),
-    index = None,
-    placeholder="Select contact method..."
-)
-st.write('You selected:', option)
+with st.sidebar:
+    option = st.selectbox(
+        "What would you like to study?",
+        ("Joins", "GroupBy", "Window Functions"),
+        index = None,
+        placeholder="Select contact method..."
+    )
+    st.write('You selected:', option)
 
 
-
-
-data = {"a": [1,2,3], "b": [4,5,6]}
-df = pd.DataFrame(data)
-
-tab1, tab2, tab3 = st.tabs(["Cat", "Dog", "Owl"])
-
-with tab1:
-    sql_query = st.text_area(label="entrez votre query")
-    result = duckdb.sql(sql_query).df()
-    st.write(f"Vous avez entre la query suivante : {sql_query}")
+# ask the user to write an input
+st.header("Enter your code:")
+query = st.text_area(label="Votre code SQL ici", key="User_input")
+if query:
+    result = duckdb.sql(query).df()
     st.dataframe(result)
 
+
+# creation of tabs
+tab2, tab3 = st.tabs(["Tables", "Solutions"])
+
 with tab2:
-    st.header("A dog")
-    st.image("https://static.streamlit.io/examples/dog.jpg", width=200)
+    st.write("table: beverages")
+    st.dataframe(beverages)
+    st.write("table: food_items")
+    st.dataframe(food_items)
+    st.write("expected:")
+    st.dataframe(solution)
 
 with tab3:
-    st.header("A owl")
-    st.image("https://static.streamlit.io/examples/owl.jpg", width=200)
+    st.write(answer)
