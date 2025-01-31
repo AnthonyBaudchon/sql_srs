@@ -2,7 +2,24 @@ import streamlit as st
 import pandas as pd
 import duckdb
 
-st.write("SQL questions")
+# the title of the app
+st.write("""
+# SQL SRS
+Spaced Repetition System SQL practice
+""")
+st.write("Let's study!")
+
+# to select a topic to study
+option = st.selectbox(
+    "How would you like to study?",
+    ("Joins", "GroupBy", "Window Functions"),
+    index = None,
+    placeholder="Select contact method..."
+)
+st.write('You selected:', option)
+
+
+
 
 data = {"a": [1,2,3], "b": [4,5,6]}
 df = pd.DataFrame(data)
