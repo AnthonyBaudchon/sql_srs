@@ -1,7 +1,21 @@
 # pylint: disable=missing-module-docstring
-import ast
+
+import os
+import logging
 import duckdb
 import streamlit as st
+
+
+if "data" not in os.listdir():
+    print("creating folder data")
+    logging.error(os.listdir())
+    logging.error("creating folder data")
+    os.mkdir("data")
+
+if "exercises_sql_tables.duckdb" not in os.listdir("data"):
+    exec(open("init_db.py").read())  # pylint: disable=maybe-no-member
+    # subprocess.run(["python", "init_db.py"])
+
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
@@ -77,7 +91,7 @@ if query:
 tab2, tab3 = st.tabs(["Tables", "Solutions"])
 
 with tab2:
-    exercise_tables = ast.literal_eval(exercise.loc[0, "tables"])
+    exercise_tables = exercise.loc[0, "tables"]
     for table in exercise_tables:
         st.write(f"table: {table}")
         df_table = con.execute(f"SELECT * FROM {table}").df()
