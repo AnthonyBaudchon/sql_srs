@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring
-
+import ast
 import duckdb
 import streamlit as st
 
@@ -26,7 +26,7 @@ st.write("Let's study!")
 with st.sidebar:
     theme = st.selectbox(
         "What would you like to study?",
-        ("cross_joins", "GroupBy", "Window Functions"),
+        ("cross_joins", "GroupBy", "window_functions"),
         index=None,
         placeholder="Select contact method...",
     )
@@ -36,12 +36,12 @@ with st.sidebar:
     st.write(exercise)
 
 
-# ask the user to write an input
+# ask the user to write an input & show the output
 st.header("Enter your code:")
 query = st.text_area(label="Votre code SQL ici", key="User_input")
-# if query:
-#     result = duckdb.sql(query).df()
-#     st.dataframe(result)
+if query:
+    result = con.execute(query).df()
+    st.dataframe(result)
 #
 #     # to manage the KeyError if we don't have the same columns as the ones from the solution
 #     try:
@@ -57,18 +57,20 @@ query = st.text_area(label="Votre code SQL ici", key="User_input")
 #         st.write(
 #             f"result has a {abs(n_lines_difference)} lines difference with the solution_df"
 #         )
-#
-#
+
+
 # # creation of tabs
-# tab2, tab3 = st.tabs(["Tables", "Solutions"])
-#
-# with tab2:
-#     st.write("table: beverages")
-#     st.dataframe(beverages)
-#     st.write("table: food_items")
-#     st.dataframe(food_items)
-#     st.write("expected:")
-#     st.dataframe(solution_df)
-#
-# with tab3:
-#     st.write(ANSWER_STR)
+tab2, tab3 = st.tabs(["Tables", "Solutions"])
+
+with tab2:
+     exercise_tables = ast.literal_eval(exercise.loc[0, "tables"])
+     for table in exercise_tables:
+         st.write(f"table: {table}")
+         df_table = con.execute(f"SELECT * FROM {table}").df()
+         st.dataframe(df_table)
+
+with tab3:
+    exercise_name = exercise.loc[0, "exercise_name"]
+    with open(f"answers/{exercise_name}.sql", "r") as f:
+        answer = f.read()
+    st.write(answer)
