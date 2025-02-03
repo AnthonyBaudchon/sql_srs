@@ -20,15 +20,26 @@ st.write("Let's study!")
 # then connect to the specific table in the database
 # then we open the solution of the exercise from 'answers' files for using it later
 with st.sidebar:
+    available_themes_df = con.execute("SELECT DISTINCT theme FROM memory_state").df()
     theme = st.selectbox(
         "What would you like to study?",
-        ("cross_joins", "GroupBy", "window_functions"),
+        available_themes_df["theme"].unique(),
         index=None,
-        placeholder="Select contact method...",
+        placeholder="Select a topic...",
     )
-    st.write("You selected:", theme)
+    # if/else to manage the ValueError when no theme is selected
+    if theme:
+        st.write(f"You selected {theme}")
+        select_exercise_query = f"SELECT * FROM memory_state WHERE theme = '{theme}'"
+    else:
+        select_exercise_query = f"SELECT * FROM memory_state"
 
-    exercise = con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'").df()
+    exercise = (
+        con.execute(select_exercise_query)
+        .df()
+        .sort_values("last_reviewed")
+        .reset_index(drop=True)
+    )
     st.write(exercise)
 
     exercise_name = exercise.loc[0, "exercise_name"]
