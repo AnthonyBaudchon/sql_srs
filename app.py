@@ -17,6 +17,18 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
     exec(open("init_db.py").read())  # pylint: disable=maybe-no-member
     # subprocess.run(["python", "init_db.py"])
 
+
+if "data" not in os.listdir():
+    print("creating folder data")
+    logging.error(os.listdir())
+    logging.error("creating folder data")
+    os.mkdir("data")
+
+if "exercises_sql_tables.duckdb" not in os.listdir("data"):
+    exec(open("init_db.py").read())  # pylint: disable=maybe-no-member
+    # subprocess.run(["python", "init_db.py"])
+
+
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
 
@@ -32,8 +44,10 @@ def check_users_solution(user_query: str) -> None:
     # to manage the KeyError if we don't have the same columns as the ones from the solution
     try:
         result = result[solution_df.columns]
-        st.dataframe(result.compare(solution_df))  # Compare dataframes result & solution_df
-        if result.compare(solution_df).shape == (0,0):
+        st.dataframe(
+            result.compare(solution_df)
+        )  # Compare dataframes result & solution_df
+        if result.compare(solution_df).shape == (0, 0):
             st.write("Correct !")
             st.balloons()
     except KeyError as e:
@@ -95,13 +109,15 @@ if query:
     check_users_solution(query)
 
 # creation of buttons for selecting when to re-do the exercise
-for n_days in [2,7,21]:
+for n_days in [2, 7, 21]:
     if st.button(f"revoir dans {n_days} jours"):
         next_review = date.today() + timedelta(days=n_days)
-        con.execute(f"UPDATE memory_state SET last_reviewed = '{next_review}' WHERE exercise_name = '{exercise_name}'")
+        con.execute(
+            f"UPDATE memory_state SET last_reviewed = '{next_review}' WHERE exercise_name = '{exercise_name}'"
+        )
         st.rerun()
 
-if st.button('Reset'):
+if st.button("Reset"):
     con.execute(f"UPDATE memory_state SET last_reviewed = '1970-01-01'")
     st.rerun()
 
