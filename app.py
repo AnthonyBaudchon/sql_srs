@@ -4,6 +4,7 @@ import os
 import logging
 import duckdb
 import streamlit as st
+from datetime import date, timedelta
 
 
 if "data" not in os.listdir():
@@ -82,32 +83,27 @@ with st.sidebar:
     exercise_name = exercise.loc[0, "exercise_name"]
     with open(f"answers/{exercise_name}.sql", "r") as f:
         answer = f.read()
-
+    # then we open the solution of the exercise from 'answers' files for using it later
     solution_df = con.execute(answer).df()
 
 
 # ask the user to write an input & show the output
 st.header("Enter your code:")
 query = st.text_area(label="Votre code SQL ici", key="User_input")
+
 if query:
-    result = con.execute(query).df()
-    st.dataframe(result)
+    check_users_solution(query)
 
-    # to manage the KeyError if we don't have the same columns as the ones from the solution
-    try:
-        result = result[solution_df.columns]
-        st.dataframe(
-            result.compare(solution_df)
-        )  # Compare dataframes result & solution_df
-    except KeyError as e:
-        st.write("Some columns are missing")
+# creation of buttons for selecting when to re-do the exercise
+for n_days in [2,7,21]:
+    if st.button(f"revoir dans {n_days} jours"):
+        next_review = date.today() + timedelta(days=n_days)
+        con.execute(f"UPDATE memory_state SET last_reviewed = '{next_review}' WHERE exercise_name = '{exercise_name}'")
+        st.rerun()
 
-    # to compare the number of rows
-    n_lines_difference = result.shape[0] - solution_df.shape[0]
-    if n_lines_difference != 0:
-        st.write(
-            f"result has a {abs(n_lines_difference)} lines difference with the solution_df"
-        )
+if st.button('Reset'):
+    con.execute(f"UPDATE memory_state SET last_reviewed = '1970-01-01'")
+    st.rerun()
 
 
 # creation of tabs
