@@ -16,8 +16,33 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
     exec(open("init_db.py").read())  # pylint: disable=maybe-no-member
     # subprocess.run(["python", "init_db.py"])
 
-
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
+
+
+def check_users_solution(user_query: str) -> None:
+    """
+    Checks that user SQL query is correct by:
+    1 : checking the columns
+    2 : checking the values
+    :param user_query: a string containing the query inserted by the user
+    """
+    result = con.execute(user_query).df()
+    st.dataframe(result)
+    # to manage the KeyError if we don't have the same columns as the ones from the solution
+    try:
+        result = result[solution_df.columns]
+        st.dataframe(result.compare(solution_df))  # Compare dataframes result & solution_df
+        if result.compare(solution_df).shape == (0,0):
+            st.write("Correct !")
+            st.balloons()
+    except KeyError as e:
+        st.write("Some columns are missing")
+    # to compare the number of rows
+    n_lines_difference = result.shape[0] - solution_df.shape[0]
+    if n_lines_difference != 0:
+        st.write(
+            f"result has a {abs(n_lines_difference)} lines difference with the solution_df"
+        )
 
 
 # the title of the app
@@ -31,8 +56,6 @@ st.write("Let's study!")
 
 
 # to make the user select a topic to study
-# then connect to the specific table in the database
-# then we open the solution of the exercise from 'answers' files for using it later
 with st.sidebar:
     available_themes_df = con.execute("SELECT DISTINCT theme FROM memory_state").df()
     theme = st.selectbox(
@@ -47,7 +70,7 @@ with st.sidebar:
         select_exercise_query = f"SELECT * FROM memory_state WHERE theme = '{theme}'"
     else:
         select_exercise_query = f"SELECT * FROM memory_state"
-
+    # then connect to the specific table in the database
     exercise = (
         con.execute(select_exercise_query)
         .df()
